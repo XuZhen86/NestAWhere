@@ -81,11 +81,15 @@ def init_refresh_token() -> None:
     oauth2_client_secret: str = oauth2_json['web']['client_secret']
 
   authorization_code = _prompt_authorization_code(oauth2_client_id, _DEVICE_ACCESS_PROJECT_ID.value)
+  print('authorization_code = ' + authorization_code)
+
   refresh_token = _get_refresh_token(oauth2_client_id, oauth2_client_secret, authorization_code,
                                      _DEVICE_ACCESS_PROJECT_ID.value)
+  print('refresh_token = ' + refresh_token)
 
   with open(_TOKENS_JSON.value, 'w') as fp:
     json.dump({'refresh_token': refresh_token}, fp)
+  print('successful')
 
 
 # https://developers.google.com/nest/device-access/authorize#how_to_use_a_refresh_token

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Dict
 
 import requests
-from absl import flags
+from absl import flags, logging
 from google.cloud import pubsub_v1
 
 from tokenutil import _check_response_status_code, get_access_token
@@ -55,7 +55,9 @@ def _ended(body: Dict[str, Any]) -> None:
   try:
     preview_url: str = body['resourceUpdate']['events'][
         'sdm.devices.events.CameraClipPreview.ClipPreview']['previewUrl']
-  except:
+  except Exception as e:
+    logging.info(e)
+    logging.info('exception getting preview_url, ignored')
     return
 
   access_token = get_access_token()
@@ -63,7 +65,9 @@ def _ended(body: Dict[str, Any]) -> None:
   response = requests.get(preview_url, headers=headers, stream=True)
   try:
     _check_response_status_code(response)
-  except:
+  except Exception as e:
+    logging.info(e)
+    logging.info('exception getting preview clip, ignored')
     return
 
   file_name = os.path.join('clips', _local_path(body) + '.mp4')
@@ -71,15 +75,16 @@ def _ended(body: Dict[str, Any]) -> None:
   with open(file_name, 'wb') as fp:
     for chunk in response.iter_content():
       fp.write(chunk)
+  logging.info(f'preview clip saved to {file_name}')
 
 
 def dispatch_messages(message: 'pubsub_v1.subscriber.message.Message') -> None:
   body: Dict[str, Any] = json.loads(message.data)
-  event_thread_state: str = body['eventThreadState']
-
+  logging.info('%s', body)
   _write_messages_json(body)
 
   # TODO: update to use match-case when yapf supports it.
+  event_thread_state: str = body['eventThreadState']
   if event_thread_state == 'STARTED':
     _started(body)
   elif event_thread_state == 'UPDATED':

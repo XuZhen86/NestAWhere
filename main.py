@@ -21,6 +21,7 @@ def main(_: List[str]) -> None:
 
   if not os.path.exists(_TOKENS_JSON.value):
     init_refresh_token()
+    return
 
   subscriber_client = pubsub.SubscriberClient.from_service_account_json(_SERVICE_ACCOUNT_JSON.value)
   future = subscriber_client.subscribe(_SUBSCRIPTION_NAME.value, dispatch_messages)
